@@ -18,7 +18,6 @@ public class Specifications {
                 predicates.add(criteriaBuilder.like(root.get("description"),"%"+description+"%"));
             if (icon != null &&  !(icon.isEmpty()))
                 predicates.add(criteriaBuilder.like(root.get("icon"),"%"+icon+"%"));
-
             return criteriaBuilder.and(predicates.toArray(new javax.persistence.criteria.Predicate[0]));
         });
     }
