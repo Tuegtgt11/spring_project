@@ -7,7 +7,6 @@ import com.tass.productservice.model.request.CategoryRequest;
 import com.tass.productservice.model.response.SearchCategoryResponse;
 import com.tass.productservice.services.CategoryService;
 import com.tass.productservice.spec.Specifications;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -65,12 +64,7 @@ public class CategoryController extends BaseController {
         return createdResponse(categoryService.findAllChildrenByQuery(name), HttpStatus.OK);
     }
 
-    @GetMapping(path = "/all/{id}")
-    public ResponseEntity<BaseResponse> searchAllParentAndChild(@PathVariable Long id) {
-        return createdResponse(categoryService.findAllParentAndChildById(id), HttpStatus.OK);
-    }
-
-    @GetMapping(path = "/name")
+    @GetMapping(path = "/searchByName")
     public ResponseEntity<BaseResponse> searchAllParentAndChild(@RequestParam(name = "name", required = false) String name) {
         return createdResponse(categoryService.findAllParentAndChildByName(name), HttpStatus.OK);
     }
@@ -83,5 +77,13 @@ public class CategoryController extends BaseController {
     @GetMapping(path = "/view/{id}")
     public ResponseEntity<BaseResponse> findALlWithView(@PathVariable Long id) {
         return createdResponse(categoryService.findAllParentAndChildWithView(id));
+    }
+    @GetMapping(path = "/findParentBySelect/{id}")
+    public ResponseEntity<BaseResponse> findAllParentBySelect(@PathVariable Long id) {
+        return createdResponse(categoryService.findAllParentBySelect(id));
+    }
+    @GetMapping(path = "/findChildrenBySelect/{id}")
+    public ResponseEntity<BaseResponse> findAllChildrenBySelect(@PathVariable Long id) {
+        return createdResponse(categoryService.findAllChildrenBySelect(id));
     }
 }
