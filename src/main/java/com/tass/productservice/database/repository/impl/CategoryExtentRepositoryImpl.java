@@ -8,7 +8,10 @@ import javax.persistence.Query;
 import com.tass.productservice.model.dto.CategoryInfo;
 import com.tass.productservice.model.response.SearchCategoryResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.transform.Transformers;
+import org.springframework.jdbc.object.SqlQuery;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -17,10 +20,9 @@ import java.util.List;
 public class CategoryExtentRepositoryImpl implements CategoryExtentRepository {
     @PersistenceContext
     Session session;
-    @Override
-    public List<Category> findCateByName(String query) {
-        return session.createNativeQuery(query, Category.class).getResultList();
-    }
+
+
+
     public void searchCategory(Integer isRoot, String name, Integer page, Integer pageSize,
                                SearchCategoryResponse.Data data) {
 
@@ -73,4 +75,15 @@ public class CategoryExtentRepositoryImpl implements CategoryExtentRepository {
             data.setItems(new ArrayList<>());
         }
     }
+    @Override
+    public List<Category> findCateByName(String query) {
+        return session.createNativeQuery(query, Category.class).getResultList();
+    }
+
+    @Override
+    public List findAllParentAndChildByQuery(String query) {
+        Query response = session.createNativeQuery(query).unwrap(SQLQuery.class).setResultTransformer(Transformers.aliasToBean(CategoryInfo.class));
+        return response.getResultList();
+    }
+
 }

@@ -65,22 +65,60 @@ public class CategoryService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(500, "Not found", null));
         }
     }
-
-    public BaseResponse findAllChildrenAndParentByQuery(String name) throws ApiException {
+    public BaseResponse findAllParentAndChildById(Long id) throws ApiException {
+        Optional<Category> list = categoryRepository.findById(id);
+        if (list.isEmpty()) {
+            throw new ApiException(ERROR.INVALID_PARAM, "category does not exist!");
+        }
+        String query ="select c.*,(select JSON_ARRAYAGG(JSON_OBJECT('id',d.id,'name',d.name,'icon',d.icon,'description',d.description,'is_root',d.is_root))\n" +
+                "            from category d where d.id in(select cr.link_id from category_relationship cr where  cr.id=c.id)) as child,\n" +
+                "       (select json_arrayagg(json_object('id',p.id,'name',p.name,'icon',p.icon,'description',p.description,'is_root',p.is_root))\n" +
+                "        from category p where p.id in(select cr2.id from  category_relationship cr2 where cr2.link_id=c.id)) as parent\n" +
+                "from category c where c.id = "+id+"";
+        log.info(query);
+        return new BaseResponse(200 , "success", categoryRepository.findAllParentAndChildByQuery(query));
+    }
+    public BaseResponse findAllParentAndChildByName(String name) throws ApiException {
         List<Category> list = categoryRepository.findByName(name);
         if (list.isEmpty()) {
             throw new ApiException(ERROR.INVALID_PARAM, "category does not exist!");
         }
-        String query = "SELECT c.id, c.name,c.icon,c.description,c.is_root\n" +
-                "FROM category c where c.name like '"+name+"'\n" +
-                "union\n" +
-                "SELECT c.id, c.name,c.icon,c.description,c.is_root\n" +
+        String query ="select c.*,(select JSON_ARRAYAGG(JSON_OBJECT('id',d.id,'name',d.name,'icon',d.icon,'description',d.description,'is_root',d.is_root))\n" +
+                "            from category d where d.id in(select cr.link_id from category_relationship cr where  cr.id=c.id)) as child,\n" +
+                "       (select json_arrayagg(json_object('id',p.id,'name',p.name,'icon',p.icon,'description',p.description,'is_root',p.is_root))\n" +
+                "        from category p where p.id in(select cr2.id from  category_relationship cr2 where cr2.link_id=c.id)) as parent\n" +
+                "from category c where c.name like '"+name+"'";
+        log.info(query);
+        return new BaseResponse(200 , "success", categoryRepository.findAllParentAndChildByQuery(query));
+    }
+    public BaseResponse findAllParentAndChildWithView(Long id) throws ApiException{
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (!optionalCategory.isPresent()) {
+            throw new ApiException(ERROR.INVALID_PARAM, "category does not exist!");
+        }
+        String query = "select * from cp where id = " + id;
+        return new BaseResponse(200, "success", categoryRepository.findCateByName(query));
+    }
+
+    public BaseResponse findAllChildrenByQuery(String name) throws ApiException {
+        List<Category> list = categoryRepository.findByName(name);
+        if (list.isEmpty()) {
+            throw new ApiException(ERROR.INVALID_PARAM, "category does not exist!");
+        }
+        String query ="SELECT c.id, c.name,c.icon,c.description,c.is_root\n" +
                 "FROM category_relationship cr join category c\n" +
                 "                                   on cr.link_id = c.id\n" +
                 "WHERE  EXISTS ( SELECT NULL\n" +
-                "                from category c where cr.id = c.id and c.name like '"+name+"' )\n" +
-                "union\n" +
-                "SELECT c.id, c.name,c.icon,c.description,c.is_root\n" +
+                "                from category c where cr.id = c.id and c.name like '"+name+"' )";
+        log.info(query);
+        return new BaseResponse(200 , "success", categoryRepository.findCateByName(query));
+    }
+    public BaseResponse findAllParentByQuery(String name) throws ApiException {
+        List<Category> list = categoryRepository.findByName(name);
+        if (list.isEmpty()) {
+            throw new ApiException(ERROR.INVALID_PARAM, "category does not exist!");
+        }
+        String query ="SELECT c.id, c.name,c.icon,c.description,c.is_root\n" +
                 "FROM category_relationship cr join category c\n" +
                 "                                   on cr.id = c.id\n" +
                 "WHERE  EXISTS ( SELECT NULL\n" +
@@ -235,5 +273,8 @@ public class CategoryService {
         if (!request.checkIsRoot() && request.getParentId() == null) {
             throw new ApiException(ERROR.INVALID_PARAM, "parent is blank");
         }
+    }
+    public List<Category> getAll(Specification<Category> specification){
+        return categoryRepository.findAll(specification);
     }
 }
